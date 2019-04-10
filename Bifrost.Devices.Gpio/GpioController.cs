@@ -57,8 +57,9 @@ namespace Bifrost.Devices.Gpio
                 return instance;
             }
         }
-        
-        public IDictionary<int, IGpioPin> Pins
+
+
+        public IDictionary<int, GetGpioPinDelegate> Pins
         {
             get
             {
@@ -66,8 +67,15 @@ namespace Bifrost.Devices.Gpio
                     .Where(di => di.Name.StartsWith("gpio"))
                     .Select(di => Tuple.Create(di, int.TryParse(di.Name.Substring("gpio".Length), out int value) ? value : (int?)null))
                     .Where(diAndPinNo => diAndPinNo.Item2.HasValue)
-                    .ToDictionary(diAndPinNo => diAndPinNo.Item2.Value, diAndPinNo => (IGpioPin)new GpioPin(diAndPinNo.Item2.Value, diAndPinNo.Item1.FullName));
+                    .ToDictionary(diAndPinNo => diAndPinNo.Item2.Value, diAndPinNo => GetGpioPin(diAndPinNo) );
             }
+        }
+
+        private GetGpioPinDelegate GetGpioPin(Tuple<DirectoryInfo, int?> diAndPinNo)
+        {
+            return () => {
+                return new GpioPin(diAndPinNo.Item2.Value, diAndPinNo.Item1.FullName);
+            };
         }
 
         public IGpioPin OpenPin(int pinNumber)
