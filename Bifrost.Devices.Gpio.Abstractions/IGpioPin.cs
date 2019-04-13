@@ -10,7 +10,5 @@ namespace Bifrost.Devices.Gpio.Abstractions
         GpioPinValue Read();
 
         void SetDriveMode(GpioPinDriveMode driveMode);
-
-        void Close(int pinNumber);
     }
 }
