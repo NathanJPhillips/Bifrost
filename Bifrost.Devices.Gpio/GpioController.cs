@@ -74,48 +74,8 @@ namespace Bifrost.Devices.Gpio
         private GetGpioPinDelegate GetGpioPin(Tuple<DirectoryInfo, int?> diAndPinNo)
         {
             return () => {
-                return new GpioPin(diAndPinNo.Item2.Value, diAndPinNo.Item1.FullName);
+                return new GpioPin(diAndPinNo.Item2.Value, diAndPinNo.Item1.FullName, DevicePath);
             };
-        }
-
-        public IGpioPin OpenPin(int pinNumber)
-        {
-            if (pinNumber < 1 || pinNumber > 26)
-            {
-                throw new ArgumentOutOfRangeException("Valid pins are between 1 and 26.");
-            }
-            // add a file to the export directory with the name <<pin number>>
-            // add folder under device path for "gpio<<pinNumber>>"
-            var gpioDirectoryPath = Path.Combine(DevicePath, string.Concat("gpio", pinNumber.ToString()));
-
-            var gpioExportPath = Path.Combine(DevicePath, "export");
-            
-            if (!Directory.Exists(gpioDirectoryPath))
-            {
-                File.WriteAllText(gpioExportPath, pinNumber.ToString());
-                Directory.CreateDirectory(gpioDirectoryPath);
-            }
-
-            // instantiate the gpiopin object to return with the pin number.
-            return new GpioPin(pinNumber, gpioDirectoryPath);
-        }
-
-        public void ClosePin(int pinNumber)
-        {
-            if (pinNumber < 1 || pinNumber > 26)
-            {
-                throw new ArgumentOutOfRangeException("Valid pins are between 1 and 26.");
-            }
-            // add a file to the export directory with the name <<pin number>>
-            // add folder under device path for "gpio<<pinNumber>>"
-            var gpioDirectoryPath = Path.Combine(DevicePath, string.Concat("gpio", pinNumber.ToString()));
-
-            var gpioExportPath = Path.Combine(DevicePath, "unexport");
-
-            if (Directory.Exists(gpioDirectoryPath))
-            {
-                File.WriteAllText(gpioExportPath, pinNumber.ToString());
-            }
         }
     }
 }
