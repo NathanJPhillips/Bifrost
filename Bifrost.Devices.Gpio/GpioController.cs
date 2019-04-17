@@ -57,8 +57,9 @@ namespace Bifrost.Devices.Gpio
                 return instance;
             }
         }
-        
-        public IDictionary<int, IGpioPin> Pins
+
+
+        public IDictionary<int, GetGpioPinDelegate> Pins
         {
             get
             {
@@ -66,48 +67,15 @@ namespace Bifrost.Devices.Gpio
                     .Where(di => di.Name.StartsWith("gpio"))
                     .Select(di => Tuple.Create(di, int.TryParse(di.Name.Substring("gpio".Length), out int value) ? value : (int?)null))
                     .Where(diAndPinNo => diAndPinNo.Item2.HasValue)
-                    .ToDictionary(diAndPinNo => diAndPinNo.Item2.Value, diAndPinNo => (IGpioPin)new GpioPin(diAndPinNo.Item2.Value, diAndPinNo.Item1.FullName));
+                    .ToDictionary(diAndPinNo => diAndPinNo.Item2.Value, diAndPinNo => GetGpioPin(diAndPinNo) );
             }
         }
 
-        public IGpioPin OpenPin(int pinNumber)
+        private GetGpioPinDelegate GetGpioPin(Tuple<DirectoryInfo, int?> diAndPinNo)
         {
-            if (pinNumber < 1 || pinNumber > 26)
-            {
-                throw new ArgumentOutOfRangeException("Valid pins are between 1 and 26.");
-            }
-            // add a file to the export directory with the name <<pin number>>
-            // add folder under device path for "gpio<<pinNumber>>"
-            var gpioDirectoryPath = Path.Combine(DevicePath, string.Concat("gpio", pinNumber.ToString()));
-
-            var gpioExportPath = Path.Combine(DevicePath, "export");
-            
-            if (!Directory.Exists(gpioDirectoryPath))
-            {
-                File.WriteAllText(gpioExportPath, pinNumber.ToString());
-                Directory.CreateDirectory(gpioDirectoryPath);
-            }
-
-            // instantiate the gpiopin object to return with the pin number.
-            return new GpioPin(pinNumber, gpioDirectoryPath);
-        }
-
-        public void ClosePin(int pinNumber)
-        {
-            if (pinNumber < 1 || pinNumber > 26)
-            {
-                throw new ArgumentOutOfRangeException("Valid pins are between 1 and 26.");
-            }
-            // add a file to the export directory with the name <<pin number>>
-            // add folder under device path for "gpio<<pinNumber>>"
-            var gpioDirectoryPath = Path.Combine(DevicePath, string.Concat("gpio", pinNumber.ToString()));
-
-            var gpioExportPath = Path.Combine(DevicePath, "unexport");
-
-            if (Directory.Exists(gpioDirectoryPath))
-            {
-                File.WriteAllText(gpioExportPath, pinNumber.ToString());
-            }
+            return () => {
+                return new GpioPin(diAndPinNo.Item2.Value, diAndPinNo.Item1.FullName, DevicePath);
+            };
         }
     }
 }

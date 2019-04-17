@@ -4,10 +4,8 @@ namespace Bifrost.Devices.Gpio.Abstractions
 {
     public interface IGpioController
     {
-        IGpioPin OpenPin(int pinNumber);
-
-        void ClosePin(int pinNumber);
-
-        IDictionary<int, IGpioPin> Pins { get; }
+        IDictionary<int, GetGpioPinDelegate> Pins { get; }
     }
+
+    public delegate IGpioPin GetGpioPinDelegate();
 }
